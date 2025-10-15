@@ -30,6 +30,12 @@
     "scopes": ["Mail.Send"]
   },
   {
+    "pathPattern": "/me/messages/{message-id}/reply",
+    "method": "post",
+    "toolName": "reply-to-mail-message",
+    "scopes": ["Mail.Send"]
+  },
+  {
     "pathPattern": "/users/{user-id}/messages",
     "method": "get",
     "toolName": "list-shared-mailbox-messages",
@@ -213,6 +219,12 @@
     "pathPattern": "/drives/{drive-id}/items/{driveItem-id}/content",
     "method": "put",
     "toolName": "upload-file-content",
+    "scopes": ["Files.ReadWrite"]
+  },
+  {
+    "pathPattern": "/drives/{drive-id}/items/{driveItem-id}:/{driveItem-path}:/content",
+    "method": "put",
+    "toolName": "upload-new-file",
     "scopes": ["Files.ReadWrite"]
   },
   {
