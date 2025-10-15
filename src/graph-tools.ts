@@ -397,7 +397,7 @@ export function registerGraphTools(
       }
     );
 
-  const uploadNewFileSchema = z.object({
+  const uploadNewFileSchema = {
     driveId: z.string().describe('Drive ID that contains the destination folder'),
     parentItemId: z
       .string()
@@ -418,7 +418,7 @@ export function registerGraphTools(
       .enum(['fail', 'replace', 'rename'])
       .describe('Conflict behavior when the file already exists')
       .optional(),
-  });
+  };
 
   registerTool(
     'upload-new-file',
