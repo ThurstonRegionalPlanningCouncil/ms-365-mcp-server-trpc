@@ -1,5 +1,7 @@
 import { defineConfig } from 'tsup';
 
+const isWindows = process.platform === 'win32';
+
 export default defineConfig({
   entry: ['src/**/*.ts', 'src/endpoints.json'],
   format: ['esm'],
@@ -11,7 +13,7 @@ export default defineConfig({
   sourcemap: false,
   dts: false,
   publicDir: false,
-  onSuccess: 'chmod +x dist/index.js',
+  onSuccess: isWindows ? undefined : 'chmod +x dist/index.js',
   loader: {
     '.json': 'copy',
   },

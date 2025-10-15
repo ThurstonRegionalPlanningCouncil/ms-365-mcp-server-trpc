@@ -222,12 +222,6 @@
     "scopes": ["Files.ReadWrite"]
   },
   {
-    "pathPattern": "/drives/{drive-id}/items/{driveItem-id}:/{driveItem-path}:/content",
-    "method": "put",
-    "toolName": "upload-new-file",
-    "scopes": ["Files.ReadWrite"]
-  },
-  {
     "pathPattern": "/drives/{drive-id}/items/{driveItem-id}/workbook/worksheets/{workbookWorksheet-id}/charts/add",
     "method": "post",
     "toolName": "create-excel-chart",

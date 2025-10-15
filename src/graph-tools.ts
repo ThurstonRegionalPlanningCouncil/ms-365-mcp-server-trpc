@@ -3,6 +3,7 @@ import logger from './logger.js';
 import GraphClient from './graph-client.js';
 import { api } from './generated/client.js';
 import { z } from 'zod';
+import { Buffer } from 'node:buffer';
 import { readFileSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -377,5 +378,100 @@ export function registerGraphTools(
         }
       }
     );
+
+  const uploadNewFileSchema = z.object({
+    driveId: z.string().describe('Drive ID that contains the destination folder'),
+    parentItemId: z
+      .string()
+      .describe('Drive item ID of the folder where the new file should be created'),
+    name: z
+      .string()
+      .min(1, 'name must not be empty')
+      .describe('File name to create (for example, report.docx)'),
+    contentBase64: z
+      .string()
+      .min(1, 'contentBase64 must not be empty')
+      .describe('Base64-encoded file content (simple upload, up to ~4 MB)'),
+    contentType: z
+      .string()
+      .describe('MIME type for the upload. Defaults to application/octet-stream')
+      .optional(),
+    conflictBehavior: z
+      .enum(['fail', 'replace', 'rename'])
+      .describe('Conflict behavior when the file already exists')
+      .optional(),
+  });
+
+  server.tool(
+    'upload-new-file',
+    'Upload a new file to a drive folder using base64 encoded content.',
+    uploadNewFileSchema,
+    {
+      title: 'upload-new-file',
+    },
+    async (params) => {
+      try {
+        const {
+          driveId,
+          parentItemId,
+          name,
+          contentBase64,
+          contentType,
+          conflictBehavior,
+        } = params;
+
+        let fileBuffer: Buffer;
+        try {
+          fileBuffer = Buffer.from(contentBase64, 'base64');
+        } catch (error) {
+          throw new Error('contentBase64 must be a valid base64-encoded string');
+        }
+
+        if (fileBuffer.length === 0) {
+          throw new Error('Decoded file content is empty.');
+        }
+
+        const encodedDriveId = encodeURIComponent(driveId);
+        const encodedParentItemId = encodeURIComponent(parentItemId);
+        const encodedName = encodeURIComponent(name);
+
+        let path = `/drives/${encodedDriveId}/items/${encodedParentItemId}:/${encodedName}:/content`;
+        if (conflictBehavior) {
+          path = `${path}?@microsoft.graph.conflictBehavior=${conflictBehavior}`;
+        }
+
+        logger.info(`Uploading new file via ${path}`);
+
+        const responseData = await graphClient.makeRequest(path, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': contentType || 'application/octet-stream',
+          },
+          body: fileBuffer,
+        });
+
+        const mcpResponse = graphClient.formatJsonResponse(responseData);
+
+        return {
+          content: mcpResponse.content,
+          _meta: mcpResponse._meta,
+          isError: mcpResponse.isError,
+        };
+      } catch (error) {
+        const message = `Error in tool upload-new-file: ${(error as Error).message}`;
+        logger.error(message);
+        const errorContent: TextContent = {
+          type: 'text',
+          text: JSON.stringify({ error: message }),
+        };
+
+        return {
+          content: [errorContent],
+          isError: true,
+        };
+      }
+    }
+  );
+
   }
 }
