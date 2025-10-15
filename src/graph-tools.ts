@@ -97,8 +97,9 @@ export function registerGraphTools(
       logger.warn(`Skipping duplicate registration for tool ${name}`);
       return;
     }
+    logger.info(`Registered tool ${name}`);
     registeredToolNames.add(name);
-    registerTool(name, description, schema, metadata, handler);
+    server.tool(name, description, schema, metadata, handler);
   };
 
   let enabledToolsRegex: RegExp | undefined;
@@ -492,3 +493,6 @@ export function registerGraphTools(
 
   }
 }
+
+
+
