@@ -1,4 +1,4 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+﻿import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import logger from './logger.js';
 import GraphClient from './graph-client.js';
 import { api } from './generated/client.js';
@@ -84,6 +84,23 @@ export function registerGraphTools(
   enabledToolsPattern?: string,
   orgMode: boolean = false
 ): void {
+  const registeredToolNames = new Set<string>();
+
+  const registerTool = (
+    name: string,
+    description: string,
+    schema: Record<string, unknown>,
+    metadata: { title: string; readOnlyHint?: boolean },
+    handler: (params: Record<string, unknown>) => Promise<CallToolResult>
+  ): void => {
+    if (registeredToolNames.has(name)) {
+      logger.warn(`Skipping duplicate registration for tool ${name}`);
+      return;
+    }
+    registeredToolNames.add(name);
+    registerTool(name, description, schema, metadata, handler);
+  };
+
   let enabledToolsRegex: RegExp | undefined;
   if (enabledToolsPattern) {
     try {
@@ -131,7 +148,7 @@ export function registerGraphTools(
       .describe('Include response headers (including ETag) in the response metadata')
       .optional();
 
-    server.tool(
+    registerTool(
       tool.alias,
       tool.description || `Execute ${tool.method.toUpperCase()} request to ${tool.path}`,
       paramSchema,
@@ -152,7 +169,7 @@ export function registerGraphTools(
           let body: unknown = null;
 
           for (let [paramName, paramValue] of Object.entries(params)) {
-            // Skip pagination control parameter - it's not part of the Microsoft Graph API - I think 🤷
+            // Skip pagination control parameter - it's not part of the Microsoft Graph API - I think ðŸ¤·
             if (paramName === 'fetchAllPages') {
               continue;
             }
@@ -402,7 +419,7 @@ export function registerGraphTools(
       .optional(),
   });
 
-  server.tool(
+  registerTool(
     'upload-new-file',
     'Upload a new file to a drive folder using base64 encoded content.',
     uploadNewFileSchema,
