@@ -690,6 +690,9 @@
     "toolName": "create-sharepoint-folder",
     "scopes": [
       "Files.ReadWrite"
+    ],
+    "workScopes": [
+      "Sites.ReadWrite.All"
     ]
   },
   {
