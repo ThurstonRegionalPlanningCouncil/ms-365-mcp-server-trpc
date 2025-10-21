@@ -1,6 +1,6 @@
 {
   "name": "@thurstonregionalplanningcouncil/ms-365-mcp-server",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": " A Model Context Protocol (MCP) server for interacting with Microsoft 365 and Office services through the Graph API",
   "type": "module",
   "main": "dist/index.js",
@@ -70,3 +70,4 @@
     "url": "https://github.com/ThurstonRegionalPlanningCouncil/ms-365-mcp-server-trpc.git"
   }
 }
+

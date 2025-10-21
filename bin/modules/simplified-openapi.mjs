@@ -59,6 +59,8 @@ export function createAndSaveSimplifiedOpenAPI(endpointsFile, openapiFile, opena
   const usedSchemas = findUsedSchemas(openApiSpec);
   pruneUnusedSchemas(openApiSpec, usedSchemas);
 
+  ensurePlannerSchemaOverrides(openApiSpec);
+
   fs.writeFileSync(openapiTrimmedFile, yaml.dump(openApiSpec));
 }
 
@@ -668,4 +670,69 @@ function pruneUnusedSchemas(openApiSpec, usedSchemas) {
       `   Removed ${originalRequestBodyCount - newRequestBodyCount} unused request bodies (from ${originalRequestBodyCount} to ${newRequestBodyCount})`
     );
   }
+}
+
+
+
+function ensurePlannerSchemaOverrides(openApiSpec) {
+  const schemas = openApiSpec.components?.schemas;
+  if (!schemas) {
+    return;
+  }
+
+  const ensureBasicObjectSchema = (name, fallbackTitle) => {
+    const existing = schemas[name] || {};
+    schemas[name] = {
+      title: existing.title || fallbackTitle,
+      description: existing.description,
+      type: 'object',
+      properties: existing.properties || {},
+      additionalProperties: existing.additionalProperties ?? true,
+    };
+  };
+
+  const ensureObjectSchema = (name, fallbackTitle, additionalProperties) => {
+    const existing = schemas[name] || {};
+    schemas[name] = {
+      title: existing.title || fallbackTitle,
+      description: existing.description,
+      type: 'object',
+      properties: existing.properties || {},
+      additionalProperties,
+    };
+  };
+
+  ensureBasicObjectSchema('microsoft.graph.plannerAssignment', 'plannerAssignment');
+  ensureBasicObjectSchema('microsoft.graph.plannerChecklistItem', 'plannerChecklistItem');
+  ensureBasicObjectSchema('microsoft.graph.plannerExternalReference', 'plannerExternalReference');
+
+  ensureObjectSchema(
+    'microsoft.graph.plannerAssignments',
+    'plannerAssignments',
+    { $ref: '#/components/schemas/microsoft.graph.plannerAssignment' }
+  );
+
+  ensureObjectSchema(
+    'microsoft.graph.plannerChecklistItems',
+    'plannerChecklistItems',
+    { $ref: '#/components/schemas/microsoft.graph.plannerChecklistItem' }
+  );
+
+  ensureObjectSchema(
+    'microsoft.graph.plannerExternalReferences',
+    'plannerExternalReferences',
+    { $ref: '#/components/schemas/microsoft.graph.plannerExternalReference' }
+  );
+
+  ensureObjectSchema(
+    'microsoft.graph.plannerAppliedCategories',
+    'plannerAppliedCategories',
+    { type: 'boolean' }
+  );
+
+  ensureObjectSchema(
+    'microsoft.graph.plannerOrderHintsByAssignee',
+    'plannerOrderHintsByAssignee',
+    { type: 'string' }
+  );
 }
